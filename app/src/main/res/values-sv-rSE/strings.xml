@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rally</string>
+    <string name="main_sections_home">Översikt</string>
+    <string name="main_sections_savings">Sparande</string>
+    <string name="main_sections_transactions">Transaktioner</string>
+    <string name="main_sections_statistics">Statistik</string>
+    <string name="main_sections_search">Sök</string>
+</resources>

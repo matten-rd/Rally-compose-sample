@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Rally</string>
+
+    <!-- Bottom nav strings -->
+    <string name="main_sections_home">Overview</string>
+    <string name="main_sections_savings">Savings</string>
+    <string name="main_sections_transactions">Transactions</string>
+    <string name="main_sections_statistics">Statistics</string>
+    <string name="main_sections_search">Search</string>
+
+    <string name="empty_string" translatable="false" />
+
+</resources>
