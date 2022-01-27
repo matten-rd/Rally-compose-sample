@@ -7,6 +7,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,12 +55,12 @@ fun SavingsDetailScreen(
             .padding(horizontal = 12.dp)
     ) {
         LoadingErrorContent(
-            empty = uiState.isLoading,
+            empty = if (account != null) false else uiState.isLoading,
             emptyContent = { FullScreenLoading(Modifier.fillMaxSize()) },
             error = uiState.isError,
             errorContent = { FullScreenError() {  } },
             loading = uiState.isLoading,
-            onRefresh = { viewModel.fetchAccount() }
+            onRefresh = { viewModel.fetchAccount(isRefresh = true) }
         ) {
             if (account != null) {
                 if (uiState.isDialogOpen) {
@@ -128,10 +129,11 @@ private fun SavingsScreenDetailContent(
     onSaveClick: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val formattedBalance = remember(currentBalance) { formatAmount(currentBalance.toFloat()) }
-    val formattedChange = remember(change) { formatAmount(change) }
+    // The balance and change on screen should never be recalculated
+    val formattedBalance = rememberSaveable { formatAmount(currentBalance.toFloatOrNull()) }
+    val formattedChange = remember { formatAmount(change) }
 
-    val editEnabled = remember { mutableStateOf(false) }
+    val editEnabled = rememberSaveable { mutableStateOf(false) }
     val restoreColor = remember { mutableStateOf(colors[0]) }
 
     if (isColorDialogOpen) {
@@ -197,7 +199,7 @@ private fun SavingsScreenDetailContent(
                 CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                     Text(text = "Utveckling", style = MaterialTheme.typography.body2)
                 }
-                // FIXME: Vet ej om kr eller procent eller båda
+                // FIXME: Not sure if I should display in percent or absolute or both
                 Text(text = "$formattedChange kr", style = MaterialTheme.typography.h6)
             }
 
@@ -222,9 +224,6 @@ private fun SavingsScreenDetailContent(
             onItemSelected = onTimeIntervalChange
         )
 
-        // FIXME: This should have it's own state to not update the rest of the ui when it changes
-        // FIXME: So currentBalance should be changed back to Float
-        // FIXME: And snackbar should only be displayed when onSaveClick is called
         SavingsCreateEditCard(
             enabled = editEnabled.value,
             restoreColor = restoreColor,

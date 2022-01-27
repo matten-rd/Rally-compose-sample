@@ -20,6 +20,7 @@ class SavingsRepository @Inject constructor(
         savingsDao.getAllAccounts()
             .map {
                 try {
+                    // This cast is not useless
                     Result.Success(it) as Result<List<SavingsAccount>>
                 } catch (e: IOException) {
                     Result.Error(IOException("IO: Could not read data from database"))
@@ -32,6 +33,7 @@ class SavingsRepository @Inject constructor(
         getAllAccountsFake1()
             .map {
                 try {
+                    // This cast is not useless
                     Result.Success(it) as Result<List<SavingsAccount>>
                 } catch (e: IOException) {
                     Result.Error(IOException("IO: Could not read data from database"))

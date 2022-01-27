@@ -256,8 +256,8 @@ fun RallyDivider(modifier: Modifier = Modifier) {
     Divider(color = MaterialTheme.colors.background, thickness = 1.dp, modifier = modifier)
 }
 
-internal fun formatAmount(amount: Float): String {
-    return AmountDecimalFormat.format(amount)
+internal fun formatAmount(amount: Float?): String {
+    return AmountDecimalFormat.format(amount ?: 0f)
 }
 private val AmountDecimalFormat = DecimalFormat("#,###")
 

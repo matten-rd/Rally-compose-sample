@@ -18,6 +18,7 @@ import com.example.rally.ui.theme.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -89,12 +90,14 @@ class SavingsDetailViewModel @Inject constructor(
         }
     }
 
-    fun fetchAccount() {
+    fun fetchAccount(isRefresh: Boolean = false) {
         fetchJob?.cancel()
         if (accountId != null) {
             fetchJob = viewModelScope.launch {
                 uiState = uiState.copy(isLoading = true)
-
+                if (isRefresh) {
+                    delay(800)
+                }
                 accountLiveData.value = savingsRepository.getAccountById(accountId)
 
                 accountLiveData.asFlow().collect {
@@ -130,25 +133,11 @@ class SavingsDetailViewModel @Inject constructor(
         )
     }
     fun onCurrentBalanceChange(newCurrentBalance: String) {
-        val newCurrentBalanceFloat = newCurrentBalance.toFloatOrNull()
-        // FIXME: Change savingsItem currentBalance to be a String instead
-        // Check that the input is of/can be converted to Float type
-        if (newCurrentBalanceFloat != null) {
-            uiState = uiState.copy(
-                savingsItem = uiState.savingsItem?.copy(
-                    currentBalance = newCurrentBalance
-                )
+        uiState = uiState.copy(
+            savingsItem = uiState.savingsItem?.copy(
+                currentBalance = newCurrentBalance
             )
-        } else {
-            // FIXME: Not sure if I should send error event or update uiState instead
-            // Fixme: Probably just update uiState, channel is for async (db operations etc.)
-            val infoMessages = uiState.userMessages + getMessagesFromThrowable(
-                Exception("Unexpected error"))
-            uiState = uiState.copy(userMessages = infoMessages)
-//            viewModelScope.launch {
-//                eventChannel.send(DetailEvent.Error)
-//            }
-        }
+        )
     }
     fun onColorChange(newColor: Color) {
         uiState = uiState.copy(
@@ -169,19 +158,27 @@ class SavingsDetailViewModel @Inject constructor(
     fun onSaveClick() {
         val account = uiState.savingsItem
         if (account != null) {
-            val accountHistory = account.history + LineChartData(
-                timeStamp = Instant.now().toEpochMilli(),
-                amount = account.currentBalance.toFloat() // This is safe
-            )
-            val updatedAccount = fromSavingsItemUiStateUseCase(
-                account.copy(history = accountHistory)
-            )
+            if (isValidInput(account.currentBalance)) {
+                // Add the current balance and timestamp to history
+                val accountHistory = account.history + LineChartData(
+                    timeStamp = Instant.now().toEpochMilli(),
+                    amount = account.currentBalance.toFloat() // This is safe
+                )
+                // Create the updated account with new history from above
+                val updatedAccount = fromSavingsItemUiStateUseCase(
+                    account.copy(history = accountHistory)
+                )
 
-            viewModelScope.launch {
-                updateAccount(updatedAccount)
+                viewModelScope.launch {
+                    updateAccount(updatedAccount)
+                }
+            } else {
+                // TODO: Display error on balance text field
             }
         } else {
-            // If the account if null then send an Error event
+            // FIXME: Not sure if I should send error event or update uiState instead
+            // Fixme: Probably just update uiState, channel is for async (db operations etc.)
+            // If the account is null then send an Error event
             viewModelScope.launch {
                 eventChannel.send(DetailEvent.Error)
             }
@@ -191,6 +188,11 @@ class SavingsDetailViewModel @Inject constructor(
     private suspend fun updateAccount(updatedAccount: SavingsAccount) {
         savingsRepository.updateAccount(updatedAccount)
         eventChannel.send(DetailEvent.AccountUpdated)
+    }
+
+    private fun isValidInput(currentBalance: String): Boolean {
+        // Checks that the input is of/can be converted to Float type
+        return currentBalance.toFloatOrNull() != null
     }
 
     fun deleteAccount() = viewModelScope.launch {

@@ -19,6 +19,17 @@ import com.example.rally.R
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
+/**
+ * Display an initial empty state or swipe to refresh content
+ *
+ * @param empty when true, display [emptyContent]
+ * @param emptyContent content to be displayed for the empty state
+ * @param error when true, display [errorContent]
+ * @param errorContent content to be displayed when there is an error
+ * @param loading when true, display a loading spinner over [content]
+ * @param onRefresh event to request refresh
+ * @param content the main content to show
+ */
 @Composable
 fun LoadingErrorContent(
     empty: Boolean,
@@ -29,20 +40,19 @@ fun LoadingErrorContent(
     onRefresh: () -> Unit,
     content: @Composable () -> Unit
 ) {
+    // TODO: implement custom indicator
     when {
         empty -> emptyContent()
         error -> SwipeRefresh(
             state = rememberSwipeRefreshState(isRefreshing = loading),
-            onRefresh = onRefresh
-        ) {
-            errorContent()
-        }
+            onRefresh = onRefresh,
+            content = errorContent
+        )
         else -> SwipeRefresh(
             state = rememberSwipeRefreshState(isRefreshing = loading),
-            onRefresh = onRefresh
-        ) {
-            content()
-        }
+            onRefresh = onRefresh,
+            content = content
+        )
     }
 }
 

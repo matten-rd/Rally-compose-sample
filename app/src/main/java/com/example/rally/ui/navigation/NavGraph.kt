@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.*
@@ -192,38 +191,6 @@ fun AnimatedContentScope<NavBackStackEntry>.rallyPeerExitTransition(): ExitTrans
         slideOutHorizontally(targetOffsetX = { it })
     } else {
         slideOutHorizontally(targetOffsetX = { -it })
-    }
-}
-
-fun AnimatedContentScope<NavBackStackEntry>.rallyParentChildEnterTransition1(): EnterTransition {
-    return if (bottomNavItems.any { it.route == targetState.destination.route }) {
-        //slideInVertically(initialOffsetY = { -it })
-        fadeIn()
-    } else {
-        //slideInVertically(initialOffsetY = { it })
-        expandVertically(
-            expandFrom = Alignment.CenterVertically,
-            animationSpec = tween(
-                durationMillis = 300,
-                easing = LinearOutSlowInEasing
-            )
-        )
-    }
-}
-
-fun AnimatedContentScope<NavBackStackEntry>.rallyParentChildExitTransition1(): ExitTransition {
-    return if (bottomNavItems.any { it.route == initialState.destination.route }) {
-        //slideOutVertically(targetOffsetY = { -it })
-        fadeOut()
-    } else {
-        //slideOutVertically(targetOffsetY = { it })
-        shrinkVertically(
-            shrinkTowards = Alignment.CenterVertically,
-            animationSpec = tween(
-                durationMillis = 250,
-                easing = FastOutLinearInEasing
-            )
-        )
     }
 }
 

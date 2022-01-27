@@ -8,6 +8,7 @@ import com.example.rally.domain.ToSavingsItemUiStateUseCase
 import com.example.rally.util.exhaustive
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -59,11 +60,13 @@ class SavingsViewModel @Inject constructor(
         fetchSavings()
     }
 
-    fun fetchSavings() {
+    fun fetchSavings(isRefresh: Boolean = false) {
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
             viewModelState.update { it.copy(isLoading = true) }
-            //delay(800)
+            if (isRefresh) {
+                delay(800) // Add delay to enhance user experience
+            }
             savingsRepository.getAllAccounts().collect { result ->
                 viewModelState.update {
                     when(result) {

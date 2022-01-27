@@ -36,9 +36,9 @@ fun SavingsScreen(
             },
             emptyContent = { FullScreenLoading(Modifier.fillMaxSize()) },
             error = uiState.isError,
-            errorContent = { FullScreenError { viewModel.fetchSavings() } },
+            errorContent = { FullScreenError { viewModel.fetchSavings(isRefresh = true) } },
             loading = uiState.isLoading,
-            onRefresh = { viewModel.fetchSavings() }
+            onRefresh = { viewModel.fetchSavings(isRefresh = true) }
         ) {
             SavingsScreenContent(
                 uiState = uiState,
