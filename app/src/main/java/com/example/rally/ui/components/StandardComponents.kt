@@ -10,9 +10,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -27,6 +25,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.rally.ui.savings.GeneralUiState
 import com.example.rally.ui.theme.RallyDialogThemeOverlay
 import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import com.google.accompanist.flowlayout.FlowRow
@@ -194,5 +193,57 @@ internal fun RallyChip(
         }
     }
 }
+
+/**
+ * Component to handle snackbar error (or general) messages to the user
+ *
+ * @param T [GeneralUiState]
+ * @param uiState [T] This stores the message
+ * @param scaffoldState To be able to show the snackbar
+ * @param retryMessageText Button text
+ * @param onRefresh Called if action is performed (button clicked)
+ * @param onErrorDismiss Notify viewModel that the snackbar with id has been shown
+ */
+@Composable
+fun <T : GeneralUiState> SnackbarMessageHandler(
+    uiState: T,
+    scaffoldState: ScaffoldState,
+    retryMessageText: String? = null,
+    onRefresh: () -> Unit,
+    onErrorDismiss: (Long) -> Unit
+) {
+    // Process one error message at a time and show them as Snackbars in the UI
+    if (uiState.userMessages.isNotEmpty()) {
+        // Remember the errorMessage to display on the screen
+        val errorMessage = remember(uiState) { uiState.userMessages[0] }
+
+        // Get the text to show on the message from resources
+        //val errorMessageText: String = stringResource(errorMessage.id)
+        //val retryMessageText = stringResource(id = R.string.retry)
+        val errorMessageText = errorMessage.message
+
+        // If onRefreshPosts or onErrorDismiss change while the LaunchedEffect is running,
+        // don't restart the effect and use the latest lambda values.
+        val onRefreshPostsState by rememberUpdatedState(onRefresh)
+        val onErrorDismissState by rememberUpdatedState(onErrorDismiss)
+
+        // Effect running in a coroutine that displays the Snackbar on the screen
+        // If there's a change to errorMessageText, retryMessageText or scaffoldState,
+        // the previous effect will be cancelled and a new one will start with the new values
+        LaunchedEffect(errorMessageText, retryMessageText, scaffoldState) {
+            val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
+                message = errorMessageText,
+                actionLabel = retryMessageText,
+                duration = SnackbarDuration.Long
+            )
+            if (snackbarResult == SnackbarResult.ActionPerformed) {
+                onRefreshPostsState()
+            }
+            // Once the message is displayed and dismissed, notify the ViewModel
+            onErrorDismissState(errorMessage.id)
+        }
+    }
+}
+
 
 

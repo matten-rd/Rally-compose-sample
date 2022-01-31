@@ -98,6 +98,7 @@ class SavingsDetailViewModel @Inject constructor(
                 if (isRefresh) {
                     delay(800)
                 }
+                // This will populate SavedStateHandle with the account
                 accountLiveData.value = savingsRepository.getAccountById(accountId)
 
                 accountLiveData.asFlow().collect {
@@ -145,14 +146,7 @@ class SavingsDetailViewModel @Inject constructor(
         )
     }
     fun onTimeIntervalChange(newTimeInterval: TimeInterval) {
-        val newHistory = uiState.savingsItem?.history?.filter {
-            // All dates larger than selected date should be displayed
-            it.timeStamp > newTimeInterval.date
-        } ?: emptyList()
-        uiState = uiState.copy(
-            selectedTimeInterval = newTimeInterval,
-            savingsItem = uiState.savingsItem?.copy(history = newHistory)
-        )
+        uiState = uiState.copy(selectedTimeInterval = newTimeInterval)
     }
 
     fun onSaveClick() {

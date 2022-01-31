@@ -20,6 +20,36 @@ import com.example.rally.ui.components.linechart.RallyLineChart
 import com.google.accompanist.insets.navigationBarsWithImePadding
 import kotlinx.coroutines.flow.collect
 
+/**
+ * Store filtered history here to not change the source of truth
+ */
+class HistoryState(
+    private val history: List<LineChartData>,
+    private val selectedTimeInterval: TimeInterval
+) {
+    // The filtered history that is displayed
+    // Changes when the user selects new TimeInterval
+    val filteredHistory = history.filter {
+        it.timeStamp > selectedTimeInterval.date
+    }
+}
+
+@Composable
+fun rememberHistoryState(
+    history: List<LineChartData>,
+    selectedTimeInterval: TimeInterval
+) = remember(selectedTimeInterval) {
+    // Update state when user selects new TimeInterval
+    HistoryState(history, selectedTimeInterval)
+}
+
+/**
+ * Main detail page of an account
+ *
+ * @param scaffoldState used to display snackbars
+ * @param viewModel [SavingsDetailViewModel] handle logic
+ * @param onNavigateBack event to navigate back
+ */
 @Composable
 fun SavingsDetailScreen(
     scaffoldState: ScaffoldState,
@@ -79,6 +109,7 @@ fun SavingsDetailScreen(
                         }
                     }
                 }
+                val historyState = rememberHistoryState(account.history, uiState.selectedTimeInterval)
                 SavingsScreenDetailContent(
                     colors = viewModel.colors,
                     timeIntervals = viewModel.allTimeIntervals,
@@ -86,7 +117,7 @@ fun SavingsDetailScreen(
                     bank = account.bank,
                     currentBalance = account.currentBalance,
                     color = account.color,
-                    history = account.history,
+                    history = historyState.filteredHistory,
                     change = account.change,
                     isColorDialogOpen = viewModel.isColorDialogOpen,
                     selectedTimeInterval = uiState.selectedTimeInterval,
@@ -247,44 +278,4 @@ private fun SavingsScreenDetailContent(
 
 }
 
-@Composable
-fun <T : GeneralUiState> SnackbarMessageHandler(
-    uiState: T,
-    scaffoldState: ScaffoldState,
-    retryMessageText: String? = null,
-    onRefresh: () -> Unit,
-    onErrorDismiss: (Long) -> Unit
-) {
-    // Process one error message at a time and show them as Snackbars in the UI
-    if (uiState.userMessages.isNotEmpty()) {
-        // Remember the errorMessage to display on the screen
-        val errorMessage = remember(uiState) { uiState.userMessages[0] }
-
-        // Get the text to show on the message from resources
-        //val errorMessageText: String = stringResource(errorMessage.id)
-        //val retryMessageText = stringResource(id = R.string.retry)
-        val errorMessageText = errorMessage.message
-
-        // If onRefreshPosts or onErrorDismiss change while the LaunchedEffect is running,
-        // don't restart the effect and use the latest lambda values.
-        val onRefreshPostsState by rememberUpdatedState(onRefresh)
-        val onErrorDismissState by rememberUpdatedState(onErrorDismiss)
-
-        // Effect running in a coroutine that displays the Snackbar on the screen
-        // If there's a change to errorMessageText, retryMessageText or scaffoldState,
-        // the previous effect will be cancelled and a new one will start with the new values
-        LaunchedEffect(errorMessageText, retryMessageText, scaffoldState) {
-            val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
-                message = errorMessageText,
-                actionLabel = retryMessageText,
-                duration = SnackbarDuration.Long
-            )
-            if (snackbarResult == SnackbarResult.ActionPerformed) {
-                onRefreshPostsState()
-            }
-            // Once the message is displayed and dismissed, notify the ViewModel
-            onErrorDismissState(errorMessage.id)
-        }
-    }
-}
 
